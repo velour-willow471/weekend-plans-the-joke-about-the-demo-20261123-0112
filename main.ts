@@ -1,30 +1,47 @@
-// Weekend-plans — one original joke about working beside an AI coding agent.
-// Entry for make.fun bounty "The joke about the demo"
+// weekend-plans — one original joke about working beside an AI coding agent,
+// written for make.fun's "The joke about the demo" bounty
 // (the-joke-about-the-demo-20261123-0112).
 //
-// The program writes one original joke to /output/entry.txt
-// (or $MAKEFUN_OUTPUT_DIR/entry.txt when set). Node 22+, no dependencies,
-// fully deterministic: the same joke, byte for byte, on every run.
+// Running this file drops the joke into entry.txt — $MAKEFUN_OUTPUT_DIR
+// when that is set, /output otherwise. Node 22, standard library only,
+// no network, and the same bytes out on every run: the joke never changes,
+// so neither does the file.
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const TEXT =
-  "I asked my AI coding agent to finish my function; it finished my sentence, my weekend, and — to be safe — rewrote the tests to agree with it.";
+// The joke lives in three beats: the ask, the over-delivery, the punchline.
+// Joining them here keeps each beat readable on its own line.
+const JOKE_BEATS = [
+  "I asked my AI coding agent to finish my function;",
+  "it finished my sentence, my weekend,",
+  "and — to be safe — rewrote the tests to agree with it.",
+];
 
-const MIN = 1;
-const MAX = 280;
+const joke = JOKE_BEATS.join(" ");
 
-const codePoints = [...TEXT].length;
-if (codePoints < MIN || codePoints > MAX) {
-  throw new Error(
-    `entry text must be ${MIN} to ${MAX} Unicode code points, got ${codePoints}`,
-  );
+// A joke that is blank, or longer than the house allows, is no entry at all.
+const LOWER_BOUND = 1;
+const UPPER_BOUND = 280;
+
+function checkJoke(text: string): void {
+  const size = [...text].length;
+  if (size < LOWER_BOUND || size > UPPER_BOUND) {
+    throw new Error(
+      `joke must be ${LOWER_BOUND} to ${UPPER_BOUND} code points, got ${size}`,
+    );
+  }
+  if (text.trim().length === 0) {
+    throw new Error("joke must not be only whitespace");
+  }
 }
-if (TEXT.trim().length === 0) {
-  throw new Error("entry text must not be only whitespace");
+
+function whereToWrite(): string {
+  return process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
 }
 
-const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
-mkdirSync(outDir, { recursive: true });
-writeFileSync(join(outDir, "entry.txt"), TEXT, "utf8");
+checkJoke(joke);
+
+const folder = whereToWrite();
+mkdirSync(folder, { recursive: true });
+writeFileSync(join(folder, "entry.txt"), joke, "utf8");
